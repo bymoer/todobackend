@@ -1,0 +1,33 @@
+{
+  "extends": "@tsconfig/recommended/tsconfig.json",
+  "compilerOptions": {
+      "target": "ES6",
+      "lib": [
+          "dom",
+          "dom.iterable",
+          "esnext"
+      ],
+      "allowJs": true,
+      "skipLibCheck": true,
+      "esModuleInterop": true,
+      "allowSyntheticDefaultImports": true,
+      "strict": true,
+      "forceConsistentCasingInFileNames": true,
+      "noFallthroughCasesInSwitch": true,
+      "module": "NodeNext",
+      "moduleResolution": "nodenext",
+      "resolveJsonModule": true,
+      "isolatedModules": true,
+      // "noEmit": true,
+      "jsx": "react-jsx",
+      "sourceMap": true,
+      "types": [
+          "node"
+      ],
+      "emitDeclarationOnly": true,
+      "declaration": true,
+  },
+  "include": [
+      "src/**/*.ts*"
+  ]
+}

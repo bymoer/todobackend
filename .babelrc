@@ -1,0 +1,12 @@
+{
+  "presets": [
+      ["@babel/preset-modules", {"modules": false, "targets": { "node": true }}],
+      ["@babel/preset-react", {
+          "runtime": "automatic"
+      }],
+      ["@babel/preset-typescript", {
+          "isTSX": true,
+          "allExtensions": true
+      }]
+  ]
+}
