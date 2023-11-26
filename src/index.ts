@@ -1,9 +1,24 @@
 import express, { application } from 'express';
 import { Request, Response } from 'express';
+import cors from 'cors';
+import { Server } from 'socket.io';
+import * as http from 'http';
 import mongoose from 'mongoose';
 
 const app = express();
+
+// Setup socket.io
+const server = http.createServer(app);
+const io = new Server(server);
 const port = 5000;
+
+// Corzzzzz
+app.use(cors({
+    origin: 'http://localhost:5000/', // Replace with your client's origin
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+}));
+  
 
 // Connect to mongodb
 
@@ -15,12 +30,20 @@ mongoose.connect(`mongodb://mongotodo:27017/ToDoDB`, {}).then(() => {console.log
 
 const todoSchema = new mongoose.Schema({
     title: String,
-    content: String
+    content: String,
+    isComplete: Boolean,
+    timeCreated: Number
 })
 
 const ToDo = mongoose.model('ToDo', todoSchema);
 
 //
+
+// Socket.IO setup
+io.on('connection', (socket) => {
+    console.log('A user connected....');
+})
+
 
 app.use(express.json())
 
@@ -40,6 +63,8 @@ app.get('/api/todos', async (req: Request, res: Response) => {
 
         const allToDos = await ToDo.find();
 
+        io.emit('Fetch Todos');
+
         res.status(201).json(allToDos);
         
     } catch (error) {
@@ -58,10 +83,14 @@ app.post('/api/createtodo', async (req: Request, res: Response) => {
 
         const newToDo = new ToDo({
             title: req.body.title,
-            content: req.body.content
+            content: req.body.content,
+            isComplete: req.body.isComplete,
+            timeCreated: req.body.timeCreated
         })
 
         const savedToDo = await newToDo.save();
+
+        io.emit('ToDo Created', savedToDo);
 
         res.status(201).json(savedToDo);
         
@@ -73,11 +102,13 @@ app.post('/api/createtodo', async (req: Request, res: Response) => {
 })
 
 app.put('/api/updatetodo/:id', async(req: Request, res: Response) => {
+
+    console.log('Update endpoint reached......');
     
     try {
 
         const updatedTodo = await ToDo.findByIdAndUpdate(
-            req.params._id,
+            req.params.id,
             {
                 $set: {
                     title: req.body.title,
@@ -90,6 +121,41 @@ app.put('/api/updatetodo/:id', async(req: Request, res: Response) => {
         if(!updatedTodo){
             return res.status(404).json({ error: 'Post not found!' });
         }
+
+        io.emit('ToDo Updated', req.body);
+
+        res.status(200).json(updatedTodo);
+
+    } catch (error) {
+
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error !' });
+        
+    }
+
+})
+
+app.put('/api/completetodo/:id', async(req: Request, res: Response) => {
+
+    console.log('Complete todo endpoint reached......');
+    
+    try {
+
+        const updatedTodo = await ToDo.findByIdAndUpdate(
+            req.params.id,
+            {
+                $set: {
+                    isComplete: req.body.isComplete
+                },
+            },
+            { new: true }
+        );
+        
+        if(!updatedTodo){
+            return res.status(404).json({ error: 'Post not found!' });
+        }
+
+        io.emit('ToDo Complete', req.body);
 
         res.status(200).json(updatedTodo);
 
@@ -114,6 +180,9 @@ app.delete('/api/deletetodo/:id', async(req: Request, res: Response) => {
             return res.status(404).json({ error: 'ToDo not found!' });
         }
 
+        // Socket.IO emit
+        io.emit('ToDo Deleted', deletedTodo);
+
         res.status(204).send();
 
     } catch (error) {
@@ -126,7 +195,14 @@ app.delete('/api/deletetodo/:id', async(req: Request, res: Response) => {
     
 })
 
+// http://localhost:3000/api/deletetodo/655e6c0503961e19d0dfadf8
+// http://localhost:3000/api/updatetodo/655e6c0503961e19d0dfadf8
 
-app.listen(port, () => {
+
+// app.listen(port, () => {
+//     console.log(`Example app listening on port ${port}`)
+// })
+
+server.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
