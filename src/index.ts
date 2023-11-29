@@ -8,13 +8,20 @@ import mongoose from 'mongoose';
 const app = express();
 
 // Setup socket.io
+const socketIoOptions = {
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST'],
+    },
+};
+
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, socketIoOptions);
 const port = 5000;
 
 // Corzzzzz
 app.use(cors({
-    origin: 'http://localhost:5000/', // Replace with your client's origin
+    origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
 }));
